@@ -60,7 +60,6 @@
             z-index: 100;
         }
 
-        /* HOME LOGO LINK */
         .logo {
             font-size: 1.5rem;
             font-weight: 800;
@@ -88,7 +87,6 @@
 
         .logo span { color: var(--primary-light); }
 
-        /* SINGLE DEDICATED PRODUCT VIEW */
         .single-product-container {
             display: none;
             max-width: 950px;
@@ -168,7 +166,6 @@
             transform: translateY(-2px);
         }
 
-        /* GALLERY GRID VIEW */
         .hero {
             text-align: center;
             padding: 4rem 1.5rem 2.5rem;
@@ -226,11 +223,9 @@
     <div class="announcement-bar">🔥 Verified Amazon Prime Deals • Handpicked Essentials</div>
 
     <header class="navbar">
-        <!-- Home Link (Direct URL Reset) -->
         <a href="index.html" class="logo"><div class="logo-dot"></div>Smart <span>Finds</span></a>
     </header>
 
-    <!-- SHOP ALL PRODUCTS VIEW (Gallery) -->
     <div id="shopView">
         <section class="hero">
             <h1>Aesthetic Home & Kitchen Essentials</h1>
@@ -239,7 +234,6 @@
         <main class="product-grid" id="productGrid"></main>
     </div>
 
-    <!-- DEDICATED SINGLE PRODUCT VIEW -->
     <div id="singleView" class="single-product-container">
         <div class="detail-wrapper">
             <div class="detail-img-side">
@@ -265,34 +259,44 @@
         const rawProducts = [
             {
                 id: 1,
-                title: "Under Bed Storage Containers with Wheels Foldable Organizer",
-                link: "https://amazon.com",
-                image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80"
+                title: "Vtopmart 4 Pack Large Stackable Storage Drawers, Clear",
+                link: "https://link.amazon/B04OsVgju",
+                image: "https://m.media-amazon.com/images/W/BW_MEDIAX_AVIF_MEASUREMENT_1306696-T2/images/I/81UsPrx1EJL._AC_SY300_SX300_QL70_FMwebp_.jpg"
             },
             {
                 id: 2,
-                title: "Glass Spice Jar Set with Bamboo Lids & Waterproof Labels",
-                link: "https://amazon.com",
-                image: "https://images.unsplash.com/photo-1590736704728-f4730bb30770?auto=format&fit=crop&w=600&q=80"
+                title: "PASTE_PRODUCT_2_TITLE_HERE",
+                link: "PASTE_PRODUCT_2_AFFILIATE_LINK_HERE",
+                image: "PASTE_PRODUCT_2_IMAGE_URL_HERE"
             },
             {
                 id: 3,
-                title: "Clear Acrylic Closet Shelf Dividers for Clothes & Purses",
-                link: "https://amazon.com",
-                image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&w=600&q=80"
+                title: "PASTE_PRODUCT_3_TITLE_HERE",
+                link: "PASTE_PRODUCT_3_AFFILIATE_LINK_HERE",
+                image: "PASTE_PRODUCT_3_IMAGE_URL_HERE"
+            },
+            {
+                id: 4,
+                title: "PASTE_PRODUCT_4_TITLE_HERE",
+                link: "PASTE_PRODUCT_4_AFFILIATE_LINK_HERE",
+                image: "PASTE_PRODUCT_4_IMAGE_URL_HERE"
+            },
+            {
+                id: 5,
+                title: "PASTE_PRODUCT_5_TITLE_HERE",
+                link: "PASTE_PRODUCT_5_AFFILIATE_LINK_HERE",
+                image: "PASTE_PRODUCT_5_IMAGE_URL_HERE"
             }
         ];
 
         function initPage() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Dynamic URL Parameters
             const targetUrl = urlParams.get('url');
             const customTitle = urlParams.get('title');
             const customImg = urlParams.get('img');
             const productId = parseInt(urlParams.get('id'));
 
-            // 1. Dynamic Mode (Bina code edit kiye naya product dikhane ke liye)
             if (targetUrl) {
                 document.getElementById('shopView').style.display = 'none';
                 document.getElementById('singleView').style.display = 'block';
@@ -313,7 +317,6 @@
                 return;
             }
 
-            // 2. Local ID Lookup Mode
             if (productId) {
                 const product = rawProducts.find(p => p.id === productId);
                 if (product) {
@@ -327,22 +330,13 @@
                 }
             }
 
-            // 3. Fallback Mode (Galiery Grid)
-            document.getElementById('singleView').style.display = 'none';
-            document.getElementById('shopView').style.display = 'block';
+            document.getElementById('shopView').style.display = 'none';
+            document.getElementById('singleView').style.display = 'block';
 
-            const grid = document.getElementById('productGrid');
-            grid.innerHTML = '';
-            rawProducts.forEach((item) => {
-                grid.innerHTML += `
-                    <div class="card" onclick="window.location.href='?id=${item.id}'">
-                        <div class="img-box"><img src="${item.image}" alt="${item.title}"></div>
-                        <div class="card-content">
-                            <h3>${item.title}</h3>
-                        </div>
-                    </div>
-                `;
-            });
+            const product = rawProducts[0];
+            document.getElementById('detailImg').src = product.image;
+            document.getElementById('detailTitle').innerText = product.title;
+            document.getElementById('detailAmazonBtn').href = product.link;
         }
 
         window.onload = initPage;
