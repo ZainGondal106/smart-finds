@@ -1,245 +1,453 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Muhammad Zain - Secure Checkout</title>
-    <!-- Tailwind CSS CDN for styling -->
+    <title>Excel-Style Fee & Task Manager</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- html2canvas for image export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-purple-900 via-indigo-950 to-slate-950 min-h-screen font-sans text-gray-100 flex items-center justify-center py-10 px-4">
+<body class="bg-gradient-to-br from-slate-50 via-indigo-50/20 to-emerald-50/20 text-slate-800 h-full flex flex-col antialiased selection:bg-emerald-500 selection:text-white">
 
-    <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-md p-7 sm:p-9 rounded-[2rem] shadow-2xl border border-indigo-500/20">
-        <div class="text-center mb-8">
-            <span class="inline-block bg-indigo-500/10 text-indigo-300 text-xs font-bold px-3.5 py-1 rounded-full uppercase tracking-wider mb-2 border border-indigo-500/30 shadow-sm">Secure Checkout</span>
-            <h1 class="text-3xl font-black text-white tracking-tight">Muhammad Zain</h1>
-            <p class="text-xs sm:text-sm text-indigo-200/70 mt-1">Please enter your details for Cash on Delivery</p>
-        </div>
-
-        <form id="orderForm" class="space-y-4" novalidate>
-            
-            <!-- STEP 1: Full Name -->
-            <div class="form-step space-y-3" data-step="1">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">Full Name</label>
-                    <p id="tip-custName" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Yahan apna poora naam likhein.</p>
-                    <input type="text" id="custName" required placeholder="Enter your full name" onfocus="showTip('custName')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white placeholder-indigo-300/50 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm">
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+            <div class="flex items-center space-x-3.5">
+                <div class="bg-gradient-to-tr from-emerald-600 to-teal-500 text-white p-3 rounded-2xl shadow-md shadow-emerald-500/20 flex items-center justify-center">
+                    <i class="fa-solid fa-file-excel text-xl"></i>
                 </div>
-                <button type="button" onclick="nextStep(1)" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200 flex items-center justify-center space-x-2">
-                    <span>Next</span>
+                <div>
+                    <h1 class="text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent leading-tight">Fee & Task Tracker</h1>
+                    <p class="text-xs text-slate-500 font-medium">Excel-Style Quick Expense & Payment Manager</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2.5">
+                <button onclick="app.downloadTableImage()" class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50/80 hover:bg-emerald-100 border border-emerald-200/60 rounded-xl transition shadow-2xs group">
+                    <i class="fa-solid fa-camera text-emerald-600 group-hover:scale-110 transition-transform"></i>
+                    <span>Download Table Image</span>
+                </button>
+                <button onclick="app.exportToCSV()" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-2xs">
+                    <i class="fa-solid fa-file-arrow-down text-slate-400"></i>
+                    <span>Export CSV</span>
                 </button>
             </div>
+        </div>
+    </header>
 
-            <!-- STEP 2: Phone Number -->
-            <div class="form-step space-y-3 hidden" data-step="2">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">Phone Number (Call)</label>
-                    <p id="tip-custPhone" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Apna mobile number likhein jis par rabta ho sakay.</p>
-                    <input type="tel" id="custPhone" required placeholder="03XXXXXXXXX" onfocus="showTip('custPhone')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white placeholder-indigo-300/50 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col space-y-6">
+
+        <!-- Summary Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-emerald-300 transition-all">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                <div class="relative z-10">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Total</p>
+                    <h3 id="activeTotalDisplay" class="text-2xl font-black text-slate-900 mt-1">0.00</h3>
                 </div>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(2)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3.5 px-4 rounded-xl transition duration-200">Back</button>
-                    <button type="button" onclick="nextStep(2)" class="w-2/3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200">Next</button>
+                <div class="relative z-10 w-12 h-12 bg-emerald-100/60 text-emerald-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-blue-300 transition-all">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                <div class="relative z-10">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Completed Total</p>
+                    <h3 id="doneTotalDisplay" class="text-2xl font-black text-slate-900 mt-1">0.00</h3>
+                </div>
+                <div class="relative z-10 w-12 h-12 bg-blue-100/60 text-blue-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                    <i class="fa-solid fa-circle-check"></i>
                 </div>
             </div>
 
-            <!-- STEP 3: WhatsApp Number -->
-            <div class="form-step space-y-3 hidden" data-step="3">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">WhatsApp Number (Optional)</label>
-                    <p id="tip-custWhatsapp" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Agar WhatsApp number alag hai toh wo likhein.</p>
-                    <input type="tel" id="custWhatsapp" placeholder="03XXXXXXXXX" onfocus="showTip('custWhatsapp')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white placeholder-indigo-300/50 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm">
+            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-indigo-300 transition-all">
+                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-indigo-50 rounded-full group-hover:scale-110 transition-transform"></div>
+                <div class="relative z-10">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Records</p>
+                    <h3 id="recordCountDisplay" class="text-2xl font-black text-slate-900 mt-1">0</h3>
                 </div>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(3)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3.5 px-4 rounded-xl transition duration-200">Back</button>
-                    <button type="button" onclick="nextStep(3)" class="w-2/3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200">Next</button>
+                <div class="relative z-10 w-12 h-12 bg-indigo-100/60 text-indigo-600 rounded-2xl flex items-center justify-center text-lg shadow-inner">
+                    <i class="fa-solid fa-layer-group"></i>
                 </div>
             </div>
+        </div>
 
-            <!-- STEP 4: City -->
-            <div class="form-step space-y-3 hidden" data-step="4">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">City</label>
-                    <p id="tip-custCity" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Apne city ka intikhab (select) karein.</p>
-                    <select id="custCity" required onfocus="showTip('custCity')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white focus:bg-white focus:text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm">
-                        <option value="" class="text-gray-400 bg-slate-900">Select your city</option>
-                        <option value="Lahore" class="text-gray-900">Lahore</option>
-                        <option value="Karachi" class="text-gray-900">Karachi</option>
-                        <option value="Islamabad" class="text-gray-900">Islamabad</option>
-                        <option value="Rawalpindi" class="text-gray-900">Rawalpindi</option>
-                        <option value="Faisalabad" class="text-gray-900">Faisalabad</option>
-                        <option value="Multan" class="text-gray-900">Multan</option>
-                        <option value="Peshawar" class="text-gray-900">Peshawar</option>
-                        <option value="Quetta" class="text-gray-900">Quetta</option>
-                        <option value="Other" class="text-gray-900">Other City</option>
-                    </select>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+            <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-plus text-emerald-600 text-sm"></i>
+                <span>Add New User / Record</span>
+            </h2>
+            <form id="addRecordForm" onsubmit="app.handleAddRecord(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-end">
+                <div class="sm:col-span-5">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">User Name / Description</label>
+                    <input type="text" id="addName" required placeholder="e.g. Ali Khan Tuition, Van Fee, Kamwali Bai, etc." class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 transition">
                 </div>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(4)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3.5 px-4 rounded-xl transition duration-200">Back</button>
-                    <button type="button" onclick="nextStep(4)" class="w-2/3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200">Next</button>
+                <div class="sm:col-span-3">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Date (Auto / Editable)</label>
+                    <input type="date" id="addDate" required class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 transition">
                 </div>
-            </div>
-
-            <!-- STEP 5: Sector / Area -->
-            <div class="form-step space-y-3 hidden" data-step="5">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">Sector / Block / Area Name</label>
-                    <p id="tip-custArea" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Apne area ya mohalle ka naam likhein.</p>
-                    <input type="text" id="custArea" required placeholder="e.g. Gulberg III / Phase 4" onfocus="showTip('custArea')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white placeholder-indigo-300/50 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm">
+                <div class="sm:col-span-3">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Payment Amount (Rs.)</label>
+                    <input type="number" step="0.01" id="addPayment" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-500 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 transition">
                 </div>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(5)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3.5 px-4 rounded-xl transition duration-200">Back</button>
-                    <button type="button" onclick="nextStep(5)" class="w-2/3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200">Next</button>
-                </div>
-            </div>
-
-            <!-- STEP 6: Complete Address -->
-            <div class="form-step space-y-3 hidden" data-step="6">
-                <div>
-                    <label class="block text-xs font-bold text-indigo-200 mb-1">Complete Address</label>
-                    <p id="tip-custFullAddress" class="text-[11px] text-indigo-300/90 mb-2 bg-indigo-950/80 p-2.5 rounded-lg border border-indigo-500/30 hidden">💡 Ghar ka number aur gali number likhein.</p>
-                    <textarea id="custFullAddress" rows="3" required placeholder="House #, Street #, Nearest Landmark..." onfocus="showTip('custFullAddress')" class="w-full px-4 py-3 bg-indigo-950/40 border border-indigo-500/30 rounded-xl text-white placeholder-indigo-300/50 focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 shadow-sm"></textarea>
-                </div>
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(6)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3.5 px-4 rounded-xl transition duration-200">Back</button>
-                    <button type="button" onclick="nextStep(6)" class="w-2/3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-indigo-900/30 transition duration-200">Review Details</button>
-                </div>
-            </div>
-
-            <!-- STEP 7: Review & Dual Actions (WhatsApp Share + Copy Details) -->
-            <div class="form-step space-y-3 hidden" data-step="7">
-                <div class="bg-emerald-950/40 border border-emerald-500/30 p-4 rounded-xl space-y-2 text-xs">
-                    <h3 class="font-bold text-emerald-300 text-sm mb-2 border-b border-emerald-500/20 pb-1">Review Your Order</h3>
-                    <p><strong class="text-emerald-200">Name:</strong> <span id="reviewName" class="text-white"></span></p>
-                    <p><strong class="text-emerald-200">Phone:</strong> <span id="reviewPhone" class="text-white"></span></p>
-                    <p><strong class="text-emerald-200">WhatsApp:</strong> <span id="reviewWhatsapp" class="text-white"></span></p>
-                    <p><strong class="text-emerald-200">City:</strong> <span id="reviewCity" class="text-white"></span></p>
-                    <p><strong class="text-emerald-200">Area:</strong> <span id="reviewArea" class="text-white"></span></p>
-                    <p><strong class="text-emerald-200">Address:</strong> <span id="reviewAddress" class="text-white"></span></p>
-                </div>
-
-                <div class="flex space-x-2 pt-2">
-                    <button type="button" onclick="prevStep(7)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold py-3 px-4 rounded-xl transition duration-200 text-xs">Edit</button>
-                    <!-- WhatsApp Share Button -->
-                    <button type="button" onclick="submitToWhatsApp()" class="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-xl shadow-emerald-900/30 transition duration-200 flex items-center justify-center space-x-1 text-xs">
-                        <span>WhatsApp share kardo</span>
+                <div class="sm:col-span-1">
+                    <button type="submit" class="w-full px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 h-[38px] flex items-center justify-center" title="Save Record">
+                        <i class="fa-solid fa-plus text-sm"></i>
                     </button>
                 </div>
+            </form>
+        </div>
 
-                <!-- Copy Details Button for Instagram / TikTok / Manual Paste -->
-                <div>
-                    <button type="button" id="copyBtn" onclick="copyOrderDetails()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-xl shadow-blue-900/30 transition duration-200 flex items-center justify-center space-x-2 text-xs">
-                        <span>📋 Copy Details (For Insta / TikTok / Chat)</span>
-                    </button>
-                </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="flex items-center space-x-2 bg-slate-100 p-1.5 rounded-xl w-fit">
+                <button onclick="app.switchTab('active')" id="tabActiveBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-900 shadow-xs flex items-center space-x-2">
+                    <i class="fa-solid fa-table-list text-emerald-600"></i>
+                    <span>Active Records</span>
+                    <span id="activeBadge" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px]">0</span>
+                </button>
+                <button onclick="app.switchTab('done')" id="tabDoneBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-check text-blue-600"></i>
+                    <span>Done / Completed</span>
+                    <span id="doneBadge" class="px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded-full text-[10px]">0</span>
+                </button>
+            </div>
+            
+            <div class="relative flex-1 sm:w-80">
+                <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="searchInput" oninput="app.handleSearch(this.value)" placeholder="Search user name or description..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-emerald-500 focus:bg-white transition">
+            </div>
+        </div>
+
+        <div id="tableCaptureArea" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col flex-1">
+            
+            <!-- Active Table Container -->
+            <div id="activeTableContainer" class="overflow-x-auto flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="py-4 px-4 w-14 text-center">Done</th>
+                            <th class="py-4 px-4">User Name / Description</th>
+                            <th class="py-4 px-4 w-44">Date</th>
+                            <th class="py-4 px-4 text-right w-48">Payment Amount</th>
+                            <th class="py-4 px-4 text-center w-28 action-col">Edit Mode</th>
+                            <th class="py-4 px-4 text-center w-16 action-col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activeTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50/90 border-t border-slate-200 font-bold text-xs text-slate-900">
+                            <td colspan="3" class="py-4 px-4 text-right">Active Total:</td>
+                            <td id="activeTableTotal" class="py-4 px-4 text-right text-emerald-600 font-black text-sm">0.00</td>
+                            <td colspan="2" class="action-col"></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
 
-        </form>
-    </div>
+            <!-- Done Table Container (Hidden by default) -->
+            <div id="doneTableContainer" class="overflow-x-auto flex-1 hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="py-4 px-4 w-14 text-center">Restore</th>
+                            <th class="py-4 px-4">User Name / Description</th>
+                            <th class="py-4 px-4 w-44">Date</th>
+                            <th class="py-4 px-4 text-right w-48">Payment Amount</th>
+                            <th class="py-4 px-4 text-center w-16 action-col">Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody id="doneTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-slate-50/90 border-t border-slate-200 font-bold text-xs text-slate-900">
+                            <td colspan="3" class="py-4 px-4 text-right">Completed Total:</td>
+                            <td id="doneTableTotal" class="py-4 px-4 text-right text-blue-600 font-black text-sm">0.00</td>
+                            <td class="action-col"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
 
-    <!-- JavaScript for Step-by-Step Navigation & Copy Feature -->
+        </div>
+    </main>
+
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
     <script>
-        function showTip(fieldId) {
-            const tip = document.getElementById('tip-' + fieldId);
-            if (tip) {
-                tip.classList.remove('hidden');
-            }
-        }
-
-        function nextStep(current) {
-            if (current === 1 && !document.getElementById("custName").value.trim()) {
-                alert("Please enter your full name.");
-                return;
-            }
-            if (current === 2 && !document.getElementById("custPhone").value.trim()) {
-                alert("Please enter your phone number.");
-                return;
-            }
-            if (current === 4 && !document.getElementById("custCity").value) {
-                alert("Please select your city.");
-                return;
-            }
-            if (current === 5 && !document.getElementById("custArea").value.trim()) {
-                alert("Please enter your area name.");
-                return;
-            }
-            if (current === 6 && !document.getElementById("custFullAddress").value.trim()) {
-                alert("Please enter your complete address.");
-                return;
+        class FeeManagerApp {
+            constructor() {
+                this.records = JSON.parse(localStorage.getItem('excel_fee_records_clean_v2')) || [
+                    { id: '1', name: 'Ali Khan Tuition', date: new Date().toISOString().split('T')[0], payment: 5000, status: 'active', editing: false },
+                    { id: '2', name: 'Van Monthly Fee', date: new Date().toISOString().split('T')[0], payment: 3500, status: 'active', editing: false },
+                    { id: '3', name: 'Kamwali Bai', date: new Date().toISOString().split('T')[0], payment: 4500, status: 'done', editing: false }
+                ];
+                this.activeTab = 'active';
+                this.searchQuery = '';
+                
+                this.init();
             }
 
-            if (current === 6) {
-                document.getElementById("reviewName").innerText = document.getElementById("custName").value;
-                document.getElementById("reviewPhone").innerText = document.getElementById("custPhone").value;
-                document.getElementById("reviewWhatsapp").innerText = document.getElementById("custWhatsapp").value || "N/A";
-                document.getElementById("reviewCity").innerText = document.getElementById("custCity").value;
-                document.getElementById("reviewArea").innerText = document.getElementById("custArea").value;
-                document.getElementById("reviewAddress").innerText = document.getElementById("custFullAddress").value;
+            init() {
+                document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
+                this.render();
             }
 
-            document.querySelector(`[data-step="${current}"]`).classList.add('hidden');
-            document.querySelector(`[data-step="${current + 1}"]`).classList.remove('hidden');
-        }
+            saveToStorage() {
+                localStorage.setItem('excel_fee_records_clean_v2', JSON.stringify(this.records));
+            }
 
-        function prevStep(current) {
-            document.querySelector(`[data-step="${current}"]`).classList.add('hidden');
-            document.querySelector(`[data-step="${current - 1}"]`).classList.remove('hidden');
-        }
-
-        function getOrderText() {
-            const name = document.getElementById("custName").value;
-            const phone = document.getElementById("custPhone").value;
-            const whatsapp = document.getElementById("custWhatsapp").value;
-            const city = document.getElementById("custCity").value;
-            const area = document.getElementById("custArea").value;
-            const address = document.getElementById("custFullAddress").value;
-
-            return `Order from ${name}\n\n` +
-                   `Customer Name: ${name}\n` +
-                   `Phone: ${phone}\n` +
-                   (whatsapp ? `WhatsApp: ${whatsapp}\n` : ``) +
-                   `City: ${city}\n` +
-                   `Area: ${area}\n` +
-                   `Complete Address: ${address}`;
-        }
-
-        function submitToWhatsApp() {
-            const name = document.getElementById("custName").value;
-            const phone = document.getElementById("custPhone").value;
-            const whatsapp = document.getElementById("custWhatsapp").value;
-            const city = document.getElementById("custCity").value;
-            const area = document.getElementById("custArea").value;
-            const address = document.getElementById("custFullAddress").value;
-
-            let message = `*Order from ${name}*%0A%0A`;
-            message += `*Customer Name:* ${name}%0A`;
-            message += `*Phone:* ${phone}%0A`;
-            if(whatsapp) message += `*WhatsApp:* ${whatsapp}%0A`;
-            message += `*City:* ${city}%0A`;
-            message += `*Area:* ${area}%0A`;
-            message += `*Complete Address:* ${address}%0A`;
-
-            const myWhatsAppNumber = "923454233412"; 
-            window.location.href = `https://wa.me/${myWhatsAppNumber}?text=${message}`;
-        }
-
-        function copyOrderDetails() {
-            const textToCopy = getOrderText();
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                const btn = document.getElementById("copyBtn");
-                btn.innerHTML = "<span>Copied! ✅ Ab aap jahan marzi paste kardein</span>";
-                btn.classList.remove("bg-blue-600", "hover:bg-blue-500");
-                btn.classList.add("bg-emerald-700");
+            showToast(message, type = 'success') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold flex items-center space-x-2.5 transition-all transform translate-y-2 opacity-0 animate-fade-in ${
+                    type === 'success' ? 'bg-slate-900 text-emerald-400 border-slate-800' : 'bg-slate-900 text-blue-400 border-slate-800'
+                }`;
+                
+                let icon = type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-info-circle text-blue-400';
+                toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i><span class="text-white">${message}</span>`;
+                
+                container.appendChild(toast);
+                setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
                 
                 setTimeout(() => {
-                    btn.innerHTML = "<span>📋 Copy Details (For Insta / TikTok / Chat)</span>";
-                    btn.classList.remove("bg-emerald-700");
-                    btn.classList.add("bg-blue-600", "hover:bg-blue-500");
-                }, 4000);
-            }).catch(err => {
-                alert("Failed to copy text. Please try selecting manually.");
-            });
+                    toast.classList.add('translate-y-2', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            switchTab(tab) {
+                this.activeTab = tab;
+                const activeBtn = document.getElementById('tabActiveBtn');
+                const doneBtn = document.getElementById('tabDoneBtn');
+                const activeContainer = document.getElementById('activeTableContainer');
+                const doneContainer = document.getElementById('doneTableContainer');
+
+                if (tab === 'active') {
+                    activeBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-900 shadow-xs flex items-center space-x-2";
+                    doneBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-slate-900 flex items-center space-x-2";
+                    activeContainer.classList.remove('hidden');
+                    doneContainer.classList.add('hidden');
+                } else {
+                    doneBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-slate-900 shadow-xs flex items-center space-x-2";
+                    activeBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition text-slate-500 hover:text-slate-900 flex items-center space-x-2";
+                    doneContainer.classList.remove('hidden');
+                    activeContainer.classList.add('hidden');
+                }
+                this.render();
+            }
+
+            handleAddRecord(event) {
+                event.preventDefault();
+                const name = document.getElementById('addName').value.trim();
+                const date = document.getElementById('addDate').value;
+                const payment = parseFloat(document.getElementById('addPayment').value) || 0;
+
+                const newRecord = {
+                    id: Date.now().toString(),
+                    name,
+                    date,
+                    payment,
+                    status: 'active',
+                    editing: false
+                };
+
+                this.records.unshift(newRecord);
+                this.saveToStorage();
+                document.getElementById('addRecordForm').reset();
+                document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
+                
+                this.showToast('New record added successfully!');
+                this.render();
+            }
+
+            toggleEdit(id) {
+                const record = this.records.find(r => r.id === id);
+                if (record) {
+                    record.editing = !record.editing;
+                    this.render();
+                }
+            }
+
+            saveInlineEdit(id) {
+                const row = document.getElementById(`row-${id}`);
+                if (!row) return;
+
+                const nameInput = row.querySelector('.edit-name');
+                const dateInput = row.querySelector('.edit-date');
+                const payInput = row.querySelector('.edit-pay');
+
+                const record = this.records.find(r => r.id === id);
+                if (record) {
+                    record.name = nameInput.value.trim();
+                    record.date = dateInput.value;
+                    record.payment = parseFloat(payInput.value) || 0;
+                    record.editing = false;
+
+                    this.saveToStorage();
+                    this.showToast('Record updated successfully!');
+                    this.render();
+                }
+            }
+
+            toggleStatus(id) {
+                const record = this.records.find(r => r.id === id);
+                if (record) {
+                    record.status = record.status === 'active' ? 'done' : 'active';
+                    record.editing = false;
+                    this.saveToStorage();
+                    this.showToast(record.status === 'done' ? 'Moved to Done section!' : 'Moved back to Active!');
+                    this.render();
+                }
+            }
+
+            deleteRecord(id) {
+                this.records = this.records.filter(r => r.id !== id);
+                this.saveToStorage();
+                this.showToast('Record deleted.', 'info');
+                this.render();
+            }
+
+            handleSearch(query) {
+                this.searchQuery = query.toLowerCase();
+                this.render();
+            }
+
+            exportToCSV() {
+                let csvContent = "data:text/csv;charset=utf-8,ID,User Name,Date,Payment,Status\n";
+                this.records.forEach(r => {
+                    csvContent += `"${r.id}","${r.name}","${r.date}",${r.payment},"${r.status}"\n`;
+                });
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "fee_and_task_records.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                this.showToast('Data exported as CSV successfully!');
+            }
+
+            downloadTableImage() {
+                const captureElement = document.getElementById('tableCaptureArea');
+                this.showToast('Generating table image...', 'info');
+
+                const actionCols = captureElement.querySelectorAll('.action-col');
+                actionCols.forEach(el => el.style.display = 'none');
+
+                html2canvas(captureElement, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+                    actionCols.forEach(el => el.style.display = '');
+                    const imageURL = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = imageURL;
+                    link.download = `fee_tracker_${this.activeTab}_table.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    this.showToast('Table image downloaded successfully!');
+                }).catch(err => {
+                    actionCols.forEach(el => el.style.display = '');
+                    this.showToast('Failed to generate image.', 'info');
+                });
+            }
+
+            render() {
+                const filtered = this.records.filter(r => {
+                    return r.name.toLowerCase().includes(this.searchQuery) || r.date.includes(this.searchQuery);
+                });
+
+                const activeList = filtered.filter(r => r.status === 'active');
+                const doneList = filtered.filter(r => r.status === 'done');
+
+                document.getElementById('activeBadge').innerText = activeList.length;
+                document.getElementById('doneBadge').innerText = doneList.length;
+                document.getElementById('recordCountDisplay').innerText = this.records.length;
+
+                const activeTotal = activeList.reduce((acc, curr) => acc + curr.payment, 0);
+                const doneTotal = doneList.reduce((acc, curr) => acc + curr.payment, 0);
+
+                document.getElementById('activeTotalDisplay').innerText = 'Rs. ' + activeTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('doneTotalDisplay').innerText = 'Rs. ' + doneTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('activeTableTotal').innerText = 'Rs. ' + activeTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                document.getElementById('doneTableTotal').innerText = 'Rs. ' + doneTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                const activeBody = document.getElementById('activeTableBody');
+                if (activeList.length === 0) {
+                    activeBody.innerHTML = `<tr><td colspan="6" class="py-16 text-center text-slate-400 font-medium">No active records found. Use the form above to add a new record.</td></tr>`;
+                } else {
+                    activeBody.innerHTML = activeList.map(r => `
+                        <tr id="row-${r.id}" class="hover:bg-slate-50/80 transition group">
+                            <td class="py-4 px-4 text-center">
+                                <input type="checkbox" onclick="app.toggleStatus('${r.id}')" class="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer accent-emerald-600" title="Mark as Done">
+                            </td>
+                            <td class="py-4 px-4 font-semibold text-slate-900">
+                                ${r.editing ? `<input type="text" value="${r.name}" class="edit-name w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:border-emerald-500 shadow-2xs">` : r.name}
+                            </td>
+                            <td class="py-4 px-4 text-slate-600 font-medium">
+                                ${r.editing ? `<input type="date" value="${r.date}" class="edit-date w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:border-emerald-500 shadow-2xs">` : r.date}
+                            </td>
+                            <td class="py-4 px-4 text-right font-bold text-slate-900">
+                                ${r.editing ? `<input type="number" step="0.01" value="${r.payment}" class="edit-pay w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs text-right font-bold focus:outline-none focus:border-emerald-500 shadow-2xs">` : 'Rs. ' + r.payment.toLocaleString()}
+                            </td>
+                            <td class="py-4 px-4 text-center action-col">
+                                ${r.editing ? 
+                                    `<button onclick="app.saveInlineEdit('${r.id}')" class="px-3.5 py-1.5 bg-emerald-600 text-white rounded-lg text-[11px] font-bold hover:bg-emerald-700 transition shadow-xs">Save</button>` : 
+                                    `<button onclick="app.toggleEdit('${r.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 rounded-lg text-[11px] font-semibold transition"><i class="fa-solid fa-pen-to-square mr-1"></i> Edit</button>`
+                                }
+                            </td>
+                            <td class="py-4 px-4 text-center action-col">
+                                <button onclick="app.deleteRecord('${r.id}')" class="text-slate-400 hover:text-red-600 p-2 transition rounded-lg hover:bg-red-50" title="Delete permanently">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                const doneBody = document.getElementById('doneTableBody');
+                if (doneList.length === 0) {
+                    doneBody.innerHTML = `<tr><td colspan="5" class="py-16 text-center text-slate-400 font-medium">No completed items yet. Check off items from the active list to move them here.</td></tr>`;
+                } else {
+                    doneBody.innerHTML = doneList.map(r => `
+                        <tr class="hover:bg-slate-50/80 transition bg-slate-50/40 opacity-80">
+                            <td class="py-4 px-4 text-center">
+                                <input type="checkbox" checked onclick="app.toggleStatus('${r.id}')" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600" title="Restore to active">
+                            </td>
+                            <td class="py-4 px-4 font-semibold text-slate-600 line-through">${r.name}</td>
+                            <td class="py-4 px-4 text-slate-500 font-medium">${r.date}</td>
+                            <td class="py-4 px-4 text-right font-bold text-slate-600">Rs. ${r.payment.toLocaleString()}</td>
+                            <td class="py-4 px-4 text-center action-col">
+                                <button onclick="app.deleteRecord('${r.id}')" class="text-slate-400 hover:text-red-600 p-2 transition rounded-lg hover:bg-red-50" title="Delete permanently">
+                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
         }
+
+        const app = new FeeManagerApp();
     </script>
 </body>
 </html>
