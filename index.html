@@ -1,453 +1,314 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Excel-Style Fee & Task Manager</title>
+    <title>Fee & Task Manager</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- html2canvas for image export -->
+    <!-- html2canvas for downloading table image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #fdf4ff; }
-        ::-webkit-scrollbar-thumb { background: #f0abfc; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #e879f9; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #fdf4ff 0%, #fff7ed 50%, #fef2f2 100%);
+            min-height: 100vh;
         }
-        .animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+        .excel-table th, .excel-table td {
+            border: 1px solid #e5e7eb;
+        }
+        /* Class applied during image capture to hide checkboxes and action buttons */
+        .capturing .hide-on-capture {
+            display: none !important;
+        }
+        .capturing .table-container {
+            box-shadow: none !important;
+            border: none !important;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 via-amber-50/30 to-red-50/20 text-slate-800 h-full flex flex-col antialiased selection:bg-purple-500 selection:text-white">
+<body class="text-gray-800 p-4 sm:p-8">
 
-    <header class="bg-white/90 backdrop-blur-md border-b border-purple-100 sticky top-0 z-30 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-            <div class="flex items-center space-x-3.5">
-                <div class="bg-gradient-to-tr from-purple-600 via-red-500 to-amber-500 text-white p-3 rounded-2xl shadow-md shadow-purple-500/20 flex items-center justify-center">
-                    <i class="fa-solid fa-file-excel text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-lg font-bold bg-gradient-to-r from-purple-900 to-red-800 bg-clip-text text-transparent leading-tight">Fee & Task Tracker</h1>
-                    <p class="text-xs text-purple-600/70 font-medium">Excel-Style Quick Expense & Payment Manager</p>
-                </div>
-            </div>
-            <div class="flex items-center space-x-2.5">
-                <button onclick="app.downloadTableImage()" class="inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200/80 rounded-xl transition shadow-2xs group">
-                    <i class="fa-solid fa-camera text-purple-600 group-hover:scale-110 transition-transform"></i>
-                    <span>Download Table Image</span>
-                </button>
-                <button onclick="app.exportToCSV()" class="hidden sm:inline-flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition shadow-2xs">
-                    <i class="fa-solid fa-file-arrow-down text-amber-600"></i>
-                    <span>Export CSV</span>
-                </button>
-            </div>
-        </div>
-    </header>
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-ext500 font-bold bg-gradient-to-r from-purple-600 via-red-500 to-orange-500 bg-clip-text text-transparent">
+                Fee & Task Manager
+            </h1>
+            <p class="text-gray-600 text-sm mt-1">Excel-style tracking made fast and simple</p>
+        </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col space-y-6">
-
-        <!-- Summary Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-purple-100 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-purple-300 transition-all">
-                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-purple-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
-                <div class="relative z-10">
-                    <p class="text-[11px] font-bold text-purple-400 uppercase tracking-wider">Total Amount</p>
-                    <h3 id="activeTotalDisplay" class="text-2xl font-black text-purple-950 mt-1">0.00</h3>
-                </div>
-                <div class="relative z-10 w-12 h-12 bg-purple-100 text-purple-700 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                    <i class="fa-solid fa-wallet"></i>
-                </div>
-            </div>
-            
-            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-amber-100 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-amber-300 transition-all">
-                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-amber-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
-                <div class="relative z-10">
-                    <p class="text-[11px] font-bold text-amber-500 uppercase tracking-wider">Completed Total</p>
-                    <h3 id="doneTotalDisplay" class="text-2xl font-black text-amber-950 mt-1">0.00</h3>
-                </div>
-                <div class="relative z-10 w-12 h-12 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                    <i class="fa-solid fa-circle-check"></i>
-                </div>
-            </div>
-
-            <div class="bg-white/90 backdrop-blur-xs p-5 rounded-2xl border border-red-100 shadow-xs flex items-center justify-between relative overflow-hidden group hover:border-red-300 transition-all">
-                <div class="absolute right-0 top-0 translate-x-4 -translate-y-4 w-24 h-24 bg-red-100/50 rounded-full group-hover:scale-110 transition-transform"></div>
-                <div class="relative z-10">
-                    <p class="text-[11px] font-bold text-red-400 uppercase tracking-wider">Total Records</p>
-                    <h3 id="recordCountDisplay" class="text-2xl font-black text-red-950 mt-1">0</h3>
-                </div>
-                <div class="relative z-10 w-12 h-12 bg-red-100 text-red-700 rounded-2xl flex items-center justify-center text-lg shadow-inner">
-                    <i class="fa-solid fa-layer-group"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-2xl border border-purple-100 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-purple-600 via-red-500 to-amber-500"></div>
-            <h2 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center space-x-2">
-                <i class="fa-solid fa-circle-plus text-purple-600 text-sm"></i>
-                <span>Add New User / Record</span>
+        <!-- Input Form Card -->
+        <div class="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-5 sm:p-6 mb-8 border border-purple-100">
+            <h2 class="text-lg font-semibold text-purple-900 mb-4 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span> Add New Record
             </h2>
-            <form id="addRecordForm" onsubmit="app.handleAddRecord(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-3.5 items-end">
+            <form id="recordForm" class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
                 <div class="sm:col-span-5">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">User Name / Description</label>
-                    <input type="text" id="addName" required placeholder="e.g. Tuition, Van Fee, Kamwali Bai, etc." class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/10 transition">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">User Name / Description</label>
+                    <input type="text" id="userName" required placeholder="e.g. Tuition, Van, Ali..." 
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-50/50 text-sm">
                 </div>
                 <div class="sm:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Date (Auto / Editable)</label>
-                    <input type="date" id="addDate" required class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/10 transition">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Date</label>
+                    <input type="date" id="recordDate" required 
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-50/50 text-sm">
                 </div>
-                <div class="sm:col-span-3">
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wide mb-1">Payment Amount (Rs.)</label>
-                    <input type="number" step="0.01" id="addPayment" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-500/10 transition">
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Payment (Rs.)</label>
+                    <input type="number" id="recordPayment" required placeholder="0" 
+                        class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-500 bg-gray-50/50 text-sm">
                 </div>
-                <div class="sm:col-span-1">
-                    <button type="submit" class="w-full px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-red-500 to-amber-500 rounded-xl hover:opacity-95 transition shadow-md shadow-purple-600/20 h-[38px] flex items-center justify-center" title="Save Record">
-                        <i class="fa-solid fa-plus text-sm"></i>
+                <div class="sm:col-span-2">
+                    <button type="submit" 
+                        class="w-full bg-gradient-to-r from-purple-600 to-orange-500 hover:from-purple-700 hover:to-orange-600 text-white font-medium py-2.5 px-4 rounded-xl shadow-lg shadow-purple-500/20 transition-all duration-200 text-sm flex items-center justify-center gap-2">
+                        <span>Add</span>
                     </button>
                 </div>
             </form>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl border border-purple-100 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex items-center space-x-2 bg-purple-50/60 p-1.5 rounded-xl w-fit">
-                <button onclick="app.switchTab('active')" id="tabActiveBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition bg-purple-600 text-white shadow-xs flex items-center space-x-2">
-                    <i class="fa-solid fa-table-list"></i>
-                    <span>Records</span>
-                    <span id="activeBadge" class="px-1.5 py-0.5 bg-white/20 text-white rounded-full text-[10px]">0</span>
+        <!-- Navigation Tabs & Actions -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4">
+            <div class="flex bg-white/80 p-1.5 rounded-2xl shadow-sm border border-purple-100 w-full sm:w-auto">
+                <button id="tabActive" onclick="switchTab('active')" 
+                    class="flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-purple-600 to-orange-500 text-white shadow-md">
+                    Active Records
                 </button>
-                <button onclick="app.switchTab('done')" id="tabDoneBtn" class="px-4 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-check text-amber-600"></i>
-                    <span>Done / Completed</span>
-                    <span id="doneBadge" class="px-1.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-[10px]">0</span>
+                <button id="tabDone" onclick="switchTab('done')" 
+                    class="flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-purple-600 transition-all">
+                    Done Records
                 </button>
             </div>
             
-            <div class="relative flex-1 sm:w-80">
-                <i class="fa-solid fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="searchInput" oninput="app.handleSearch(this.value)" placeholder="Search user name or description..." class="w-full pl-9 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-purple-500 focus:bg-white transition">
-            </div>
+            <button onclick="downloadTableImage()" 
+                class="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white font-medium px-5 py-2.5 rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                <span>Download Table Image</span>
+            </button>
         </div>
 
-        <div id="tableCaptureArea" class="bg-white rounded-2xl border border-purple-100 shadow-xs overflow-hidden flex flex-col flex-1">
-            
-            <!-- Active Table Container -->
-            <div id="activeTableContainer" class="overflow-x-auto flex-1">
-                <table class="w-full text-left border-collapse table-auto">
+        <!-- Table Container -->
+        <div id="captureArea" class="table-container bg-white rounded-2xl shadow-xl overflow-hidden border border-purple-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse excel-table text-sm">
                     <thead>
-                        <tr class="bg-purple-900 text-white border-b border-purple-950 text-[11px] font-bold uppercase tracking-wider">
-                            <th class="py-3.5 px-3 w-12 text-center">Done</th>
-                            <th class="py-3.5 px-4">User Name / Description</th>
-                            <th class="py-3.5 px-4 w-36 whitespace-nowrap">Date</th>
-                            <th class="py-3.5 px-4 text-right w-40 whitespace-nowrap">Payment Amount</th>
-                            <th class="py-3.5 px-3 text-center w-24 action-col">Edit</th>
-                            <th class="py-3.5 px-3 text-center w-14 action-col">Delete</th>
+                        <tr class="bg-purple-900 text-white uppercase text-xs tracking-wider">
+                            <th class="py-3 px-4 w-12 text-center hide-on-capture">Done</th>
+                            <th class="py-3 px-4 header-user-title">USERS</th>
+                            <th class="py-3 px-4 w-36">Date</th>
+                            <th class="py-3 px-4 w-40 text-right">Payment Amount</th>
+                            <th class="py-3 px-4 w-28 text-center hide-on-capture">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="activeTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
-                        <!-- Populated by JavaScript -->
+                    <tbody id="tableBody" class="divide-y divide-gray-100 bg-white">
+                        <!-- Dynamic Rows -->
                     </tbody>
                     <tfoot>
-                        <tr class="bg-purple-50/80 border-t border-purple-200 font-bold text-xs text-purple-950">
-                            <td colspan="3" class="py-3.5 px-4 text-right">Total:</td>
-                            <td id="activeTableTotal" class="py-3.5 px-4 text-right text-purple-700 font-black text-sm whitespace-nowrap">0.00</td>
-                            <td colspan="2" class="action-col"></td>
+                        <tr class="bg-purple-50/80 font-bold text-gray-900 border-t-2 border-purple-200">
+                            <td colspan="3" class="py-3 px-4 text-right uppercase text-xs tracking-wider hide-on-capture">Total:</td>
+                            <td class="py-3 px-4 text-right uppercase text-xs tracking-wider hide-on-capture-col sm:table-cell" id="totalLabelCell">Total:</td>
+                            <td class="py-3 px-4 text-right text-purple-900 font-extrabold text-base" id="tableTotal">Rs. 0</td>
+                            <td class="hide-on-capture"></td>
                         </tr>
                     </tfoot>
                 </table>
             </div>
-
-            <!-- Done Table Container (Hidden by default) -->
-            <div id="doneTableContainer" class="overflow-x-auto flex-1 hidden">
-                <table class="w-full text-left border-collapse table-auto">
-                    <thead>
-                        <tr class="bg-amber-800 text-white border-b border-amber-900 text-[11px] font-bold uppercase tracking-wider">
-                            <th class="py-3.5 px-3 w-12 text-center">Restore</th>
-                            <th class="py-3.5 px-4">User Name / Description</th>
-                            <th class="py-3.5 px-4 w-36 whitespace-nowrap">Date</th>
-                            <th class="py-3.5 px-4 text-right w-40 whitespace-nowrap">Payment Amount</th>
-                            <th class="py-3.5 px-3 text-center w-14 action-col">Delete</th>
-                        </tr>
-                    </thead>
-                    <tbody id="doneTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
-                        <!-- Populated by JavaScript -->
-                    </tbody>
-                    <tfoot>
-                        <tr class="bg-amber-50/80 border-t border-amber-200 font-bold text-xs text-amber-950">
-                            <td colspan="3" class="py-3.5 px-4 text-right">Total:</td>
-                            <td id="doneTableTotal" class="py-3.5 px-4 text-right text-amber-700 font-black text-sm whitespace-nowrap">0.00</td>
-                            <td class="action-col"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
         </div>
-    </main>
-
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+    </div>
 
     <script>
-        class FeeManagerApp {
-            constructor() {
-                this.records = JSON.parse(localStorage.getItem('excel_fee_records_v3')) || [
-                    { id: '1', name: 'Tuition Fee - Ali', date: new Date().toISOString().split('T')[0], payment: 5000, status: 'active', editing: false },
-                    { id: '2', name: 'Van Monthly Fee', date: new Date().toISOString().split('T')[0], payment: 3500, status: 'active', editing: false },
-                    { id: '3', name: 'Kamwali Bai', date: new Date().toISOString().split('T')[0], payment: 4500, status: 'done', editing: false }
-                ];
-                this.activeTab = 'active';
-                this.searchQuery = '';
-                
-                this.init();
+        // Set today's date as default in input
+        document.getElementById('recordDate').valueAsDate = new Date();
+
+        let records = JSON.parse(localStorage.getItem('fee_manager_records')) || [];
+        let currentTab = 'active';
+
+        function saveData() {
+            localStorage.setItem('fee_manager_records', JSON.stringify(records));
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const btnActive = document.getElementById('tabActive');
+            const btnDone = document.getElementById('tabDone');
+            if (tab === 'active') {
+                btnActive.className = "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-purple-600 to-orange-500 text-white shadow-md";
+                btnDone.className = "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-purple-600 transition-all";
+            } else {
+                btnDone.className = "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-purple-600 to-orange-500 text-white shadow-md";
+                btnActive.className = "flex-1 sm:flex-none px-6 py-2 rounded-xl text-sm font-semibold text-gray-600 hover:text-purple-600 transition-all";
             }
+            renderTable();
+        }
 
-            init() {
-                document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
-                this.render();
-            }
+        document.getElementById('recordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('userName').value.trim();
+            const date = document.getElementById('recordDate').value;
+            const payment = parseFloat(document.getElementById('recordPayment').value) || 0;
 
-            saveToStorage() {
-                localStorage.setItem('excel_fee_records_v3', JSON.stringify(this.records));
-            }
+            if(!name) return;
 
-            showToast(message, type = 'success') {
-                const container = document.getElementById('toastContainer');
-                const toast = document.createElement('div');
-                toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold flex items-center space-x-2.5 transition-all transform translate-y-2 opacity-0 animate-fade-in ${
-                    type === 'success' ? 'bg-purple-950 text-purple-200 border-purple-800' : 'bg-slate-900 text-amber-300 border-slate-800'
-                }`;
-                
-                let icon = type === 'success' ? 'fa-circle-check text-purple-400' : 'fa-info-circle text-amber-400';
-                toast.innerHTML = `<i class="fa-solid ${icon} text-sm"></i><span class="text-white">${message}</span>`;
-                
-                container.appendChild(toast);
-                setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
-                
-                setTimeout(() => {
-                    toast.classList.add('translate-y-2', 'opacity-0');
-                    setTimeout(() => toast.remove(), 300);
-                }, 3000);
-            }
+            const newRecord = {
+                id: Date.now(),
+                name,
+                date,
+                payment,
+                done: false,
+                isEditing: false
+            };
 
-            switchTab(tab) {
-                this.activeTab = tab;
-                const activeBtn = document.getElementById('tabActiveBtn');
-                const doneBtn = document.getElementById('tabDoneBtn');
-                const activeContainer = document.getElementById('activeTableContainer');
-                const doneContainer = document.getElementById('doneTableContainer');
+            records.push(newRecord);
+            saveData();
+            renderTable();
 
-                if (tab === 'active') {
-                    activeBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition bg-purple-600 text-white shadow-xs flex items-center space-x-2";
-                    doneBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center space-x-2";
-                    activeContainer.classList.remove('hidden');
-                    doneContainer.classList.add('hidden');
-                } else {
-                    doneBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition bg-amber-600 text-white shadow-xs flex items-center space-x-2";
-                    activeBtn.className = "px-4 py-2 text-xs font-bold rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center space-x-2";
-                    doneContainer.classList.remove('hidden');
-                    activeContainer.classList.add('hidden');
-                }
-                this.render();
-            }
+            // Reset form inputs except date
+            document.getElementById('userName').value = '';
+            document.getElementById('recordPayment').value = '';
+            document.getElementById('userName').focus();
+        });
 
-            handleAddRecord(event) {
-                event.preventDefault();
-                const name = document.getElementById('addName').value.trim();
-                const date = document.getElementById('addDate').value;
-                const payment = parseFloat(document.getElementById('addPayment').value) || 0;
+        function toggleDone(id) {
+            records = records.map(r => r.id === id ? { ...r, done: !r.done, isEditing: false } : r);
+            saveData();
+            renderTable();
+        }
 
-                const newRecord = {
-                    id: Date.now().toString(),
-                    name,
-                    date,
-                    payment,
-                    status: 'active',
-                    editing: false
-                };
-
-                this.records.unshift(newRecord);
-                this.saveToStorage();
-                document.getElementById('addRecordForm').reset();
-                document.getElementById('addDate').value = new Date().toISOString().split('T')[0];
-                
-                this.showToast('New record added successfully!');
-                this.render();
-            }
-
-            toggleEdit(id) {
-                const record = this.records.find(r => r.id === id);
-                if (record) {
-                    record.editing = !record.editing;
-                    this.render();
-                }
-            }
-
-            saveInlineEdit(id) {
-                const row = document.getElementById(`row-${id}`);
-                if (!row) return;
-
-                const nameInput = row.querySelector('.edit-name');
-                const dateInput = row.querySelector('.edit-date');
-                const payInput = row.querySelector('.edit-pay');
-
-                const record = this.records.find(r => r.id === id);
-                if (record) {
-                    record.name = nameInput.value.trim();
-                    record.date = dateInput.value;
-                    record.payment = parseFloat(payInput.value) || 0;
-                    record.editing = false;
-
-                    this.saveToStorage();
-                    this.showToast('Record updated successfully!');
-                    this.render();
-                }
-            }
-
-            toggleStatus(id) {
-                const record = this.records.find(r => r.id === id);
-                if (record) {
-                    record.status = record.status === 'active' ? 'done' : 'active';
-                    record.editing = false;
-                    this.saveToStorage();
-                    this.showToast(record.status === 'done' ? 'Moved to Done section!' : 'Moved back to Records!');
-                    this.render();
-                }
-            }
-
-            deleteRecord(id) {
-                this.records = this.records.filter(r => r.id !== id);
-                this.saveToStorage();
-                this.showToast('Record deleted.', 'info');
-                this.render();
-            }
-
-            handleSearch(query) {
-                this.searchQuery = query.toLowerCase();
-                this.render();
-            }
-
-            exportToCSV() {
-                let csvContent = "data:text/csv;charset=utf-8,ID,User Name,Date,Payment,Status\n";
-                this.records.forEach(r => {
-                    csvContent += `"${r.id}","${r.name}","${r.date}",${r.payment},"${r.status}"\n`;
-                });
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "fee_and_task_records.csv");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                this.showToast('Data exported as CSV successfully!');
-            }
-
-            downloadTableImage() {
-                const captureElement = document.getElementById('tableCaptureArea');
-                this.showToast('Generating table image...', 'info');
-
-                const actionCols = captureElement.querySelectorAll('.action-col');
-                actionCols.forEach(el => el.style.display = 'none');
-
-                html2canvas(captureElement, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
-                    actionCols.forEach(el => el.style.display = '');
-                    const imageURL = canvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    link.href = imageURL;
-                    link.download = `fee_tracker_${this.activeTab}_table.png`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    this.showToast('Table image downloaded successfully!');
-                }).catch(err => {
-                    actionCols.forEach(el => el.style.display = '');
-                    this.showToast('Failed to generate image.', 'info');
-                });
-            }
-
-            render() {
-                const filtered = this.records.filter(r => {
-                    return r.name.toLowerCase().includes(this.searchQuery) || r.date.includes(this.searchQuery);
-                });
-
-                const activeList = filtered.filter(r => r.status === 'active');
-                const doneList = filtered.filter(r => r.status === 'done');
-
-                document.getElementById('activeBadge').innerText = activeList.length;
-                document.getElementById('doneBadge').innerText = doneList.length;
-                document.getElementById('recordCountDisplay').innerText = this.records.length;
-
-                const activeTotal = activeList.reduce((acc, curr) => acc + curr.payment, 0);
-                const doneTotal = doneList.reduce((acc, curr) => acc + curr.payment, 0);
-
-                document.getElementById('activeTotalDisplay').innerText = 'Rs. ' + activeTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('doneTotalDisplay').innerText = 'Rs. ' + doneTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('activeTableTotal').innerText = 'Rs. ' + activeTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-                document.getElementById('doneTableTotal').innerText = 'Rs. ' + doneTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-                const activeBody = document.getElementById('activeTableBody');
-                if (activeList.length === 0) {
-                    activeBody.innerHTML = `<tr><td colspan="6" class="py-16 text-center text-slate-400 font-medium">No records found. Use the form above to add a new record.</td></tr>`;
-                } else {
-                    activeBody.innerHTML = activeList.map(r => `
-                        <tr id="row-${r.id}" class="hover:bg-purple-50/40 transition group">
-                            <td class="py-3 px-3 text-center">
-                                <input type="checkbox" onclick="app.toggleStatus('${r.id}')" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600" title="Mark as Done">
-                            </td>
-                            <td class="py-3 px-4 font-semibold text-slate-900">
-                                ${r.editing ? `<input type="text" value="${r.name}" class="edit-name w-full px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:border-purple-500 shadow-2xs">` : r.name}
-                            </td>
-                            <td class="py-3 px-4 text-slate-600 font-medium whitespace-nowrap">
-                                ${r.editing ? `<input type="date" value="${r.date}" class="edit-date w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium focus:outline-none focus:border-purple-500 shadow-2xs">` : r.date}
-                            </td>
-                            <td class="py-3 px-4 text-right font-bold text-slate-900 whitespace-nowrap">
-                                ${r.editing ? `<input type="number" step="0.01" value="${r.payment}" class="edit-pay w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs text-right font-bold focus:outline-none focus:border-purple-500 shadow-2xs">` : 'Rs. ' + r.payment.toLocaleString()}
-                            </td>
-                            <td class="py-3 px-3 text-center action-col">
-                                ${r.editing ? 
-                                    `<button onclick="app.saveInlineEdit('${r.id}')" class="px-3 py-1 bg-purple-600 text-white rounded-lg text-[11px] font-bold hover:bg-purple-700 transition shadow-xs">Save</button>` : 
-                                    `<button onclick="app.toggleEdit('${r.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-purple-800 rounded-lg text-[11px] font-semibold transition"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit</button>`
-                                }
-                            </td>
-                            <td class="py-3 px-3 text-center action-col">
-                                <button onclick="app.deleteRecord('${r.id}')" class="text-slate-400 hover:text-red-600 p-1.5 transition rounded-lg hover:bg-red-50" title="Delete permanently">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-
-                const doneBody = document.getElementById('doneTableBody');
-                if (doneList.length === 0) {
-                    doneBody.innerHTML = `<tr><td colspan="5" class="py-16 text-center text-slate-400 font-medium">No completed items yet. Check off items from the records list to move them here.</td></tr>`;
-                } else {
-                    doneBody.innerHTML = doneList.map(r => `
-                        <tr class="hover:bg-amber-50/40 transition bg-amber-50/20 opacity-85">
-                            <td class="py-3 px-3 text-center">
-                                <input type="checkbox" checked onclick="app.toggleStatus('${r.id}')" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer accent-amber-600" title="Restore">
-                            </td>
-                            <td class="py-3 px-4 font-semibold text-slate-600 line-through">${r.name}</td>
-                            <td class="py-3 px-4 text-slate-500 font-medium whitespace-nowrap">${r.date}</td>
-                            <td class="py-3 px-4 text-right font-bold text-slate-600 whitespace-nowrap">Rs. ${r.payment.toLocaleString()}</td>
-                            <td class="py-3 px-3 text-center action-col">
-                                <button onclick="app.deleteRecord('${r.id}')" class="text-slate-400 hover:text-red-600 p-1.5 transition rounded-lg hover:bg-red-50" title="Delete permanently">
-                                    <i class="fa-solid fa-trash-can text-xs"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
+        function deleteRecord(id) {
+            if(confirm('Are you sure you want to delete this record?')) {
+                records = records.filter(r => r.id !== id);
+                saveData();
+                renderTable();
             }
         }
 
-        const app = new FeeManagerApp();
+        function toggleEdit(id) {
+            records = records.map(r => r.id === id ? { ...r, isEditing: !r.isEditing } : r);
+            renderTable();
+        }
+
+        function saveEdit(id) {
+            const row = document.getElementById(`row-${id}`);
+            const nameInput = row.querySelector('.edit-name').value.trim();
+            const dateInput = row.querySelector('.edit-date').value;
+            const paymentInput = parseFloat(row.querySelector('.edit-payment').value) || 0;
+
+            if(!nameInput) return;
+
+            records = records.map(r => r.id === id ? {
+                ...r,
+                name: nameInput,
+                date: dateInput,
+                payment: paymentInput,
+                isEditing: false
+            } : r);
+
+            saveData();
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const filtered = records.filter(r => currentTab === 'active' ? !r.done : r.done);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 italic">No records found.</td></tr>`;
+                document.getElementById('tableTotal').innerText = 'Rs. 0';
+                return;
+            }
+
+            let total = 0;
+
+            filtered.forEach(r => {
+                total += r.payment;
+                const tr = document.createElement('tr');
+                tr.id = `row-${r.id}`;
+                tr.className = "hover:bg-purple-50/30 transition-colors";
+
+                if (r.isEditing) {
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-center hide-on-capture">
+                            <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleDone(${r.id})" class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4">
+                        </td>
+                        <td class="py-3 px-4">
+                            <input type="text" value="${r.name}" class="edit-name w-full px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-purple-500">
+                        </td>
+                        <td class="py-3 px-4">
+                            <input type="date" value="${r.date}" class="edit-date w-full px-2 py-1 border rounded text-sm focus:ring-2 focus:ring-purple-500">
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <input type="number" value="${r.payment}" class="edit-payment w-28 px-2 py-1 border rounded text-sm text-right focus:ring-2 focus:ring-purple-500">
+                        </td>
+                        <td class="py-3 px-4 text-center hide-on-capture">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="saveEdit(${r.id})" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2.5 py-1 rounded shadow">Save</button>
+                                <button onclick="toggleEdit(${r.id})" class="text-xs bg-gray-300 hover:bg-gray-400 text-gray-700 px-2.5 py-1 rounded">Cancel</button>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 text-center hide-on-capture">
+                            <input type="checkbox" ${r.done ? 'checked' : ''} onchange="toggleDone(${r.id})" class="rounded text-purple-600 focus:ring-purple-500 h-4 w-4 cursor-pointer">
+                        </td>
+                        <td class="py-3 px-4 font-medium text-gray-800">${escapeHtml(r.name)}</td>
+                        <td class="py-3 px-4 text-gray-600 text-sm">${r.date}</td>
+                        <td class="py-3 px-4 text-right font-semibold text-gray-900">Rs. ${r.payment.toLocaleString()}</td>
+                        <td class="py-3 px-4 text-center hide-on-capture">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="toggleEdit(${r.id})" class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-700 px-2.5 py-1 rounded font-medium transition">Edit</button>
+                                <button onclick="deleteRecord(${r.id})" class="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-2.5 py-1 rounded font-medium transition">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('tableTotal').innerText = `Rs. ${total.toLocaleString()}`;
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function downloadTableImage() {
+            const captureArea = document.getElementById('captureArea');
+            captureArea.classList.add('capturing');
+            
+            // Temporarily update header for capture
+            const headerTitle = document.querySelector('.header-user-title');
+            const originalHeaderText = headerTitle.innerText;
+            headerTitle.innerText = "USERS";
+
+            html2canvas(captureArea, {
+                scale: 2,
+                backgroundColor: '#ffffff',
+                logging: false
+            }).then(canvas => {
+                captureArea.classList.remove('capturing');
+                headerTitle.innerText = originalHeaderText;
+
+                const link = document.createElement('a');
+                link.download = `Fee_Manager_${currentTab}_table.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }).catch(err => {
+                captureArea.classList.remove('capturing');
+                headerTitle.innerText = originalHeaderText;
+                console.error("Image generation failed:", err);
+                alert("Failed to download image. Please try again.");
+            });
+        }
+
+        // Initial render
+        renderTable();
     </script>
 </body>
 </html>
